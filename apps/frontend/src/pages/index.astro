@@ -1,0 +1,58 @@
+---
+import Layout from '../layouts/Layout.astro';
+import UserCard from '../components/UserCard.astro';
+
+const API_URL = import.meta.env.PUBLIC_API_URL ?? 'http://localhost:3000';
+
+interface User {
+  id: string;
+  name: string;
+  email: string;
+}
+
+let users: User[] = [];
+let error: string | null = null;
+
+try {
+  const res = await fetch(`${API_URL}/users`);
+  if (!res.ok) throw new Error(`API returned ${res.status}`);
+  users = await res.json();
+} catch (e) {
+  error = e instanceof Error ? e.message : 'Unknown error';
+}
+---
+
+<Layout title="Users — Astro + NestJS">
+  <p style="margin-top:0; color:#475569;">
+    Data is fetched from the NestJS API at <code>{API_URL}/users</code>
+  </p>
+
+  {error ? (
+    <div class="error">
+      <strong>Could not load users.</strong>
+      <p>Make sure the backend is running on port 3000.</p>
+      <pre>{error}</pre>
+    </div>
+  ) : users.length === 0 ? (
+    <p>No users found.</p>
+  ) : (
+    <ul class="list">
+      {users.map((user) => (
+        <UserCard name={user.name} email={user.email} />
+      ))}
+    </ul>
+  )}
+</Layout>
+
+<style>
+  .list { list-style: none; padding: 0; margin: 0; }
+  .error {
+    background: #fef2f2;
+    border: 1px solid #fecaca;
+    color: #991b1b;
+    border-radius: 10px;
+    padding: 16px;
+  }
+  .error pre { background: #fee2e2; padding: 8px; border-radius: 6px; overflow: auto; font-size: 0.85rem; }
+  code { background: #e2e8f0; padding: 2px 6px; border-radius: 4px; font-size: 0.9em; }
+</style>
